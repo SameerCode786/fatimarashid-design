@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+*.log
+setup_site.ps1
+download_images.ps1
+fetch_html_clean.js
+fonts.gstatic.com/
+us.i.posthog.com/
+www.google.com/
+www.googletagmanager.com/
+usamazahid.design/
