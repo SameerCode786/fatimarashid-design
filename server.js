@@ -1,10 +1,10 @@
-// server.js - High performance zero-dependency static server with clean URL support
+// server.js - High performance zero-dependency static server with auto-port fallback
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 
-const PORT = process.env.PORT || 3000;
+let PORT = parseInt(process.env.PORT, 10) || 3000;
 const ROOT = path.resolve(__dirname);
 
 const MIME_TYPES = {
@@ -61,7 +61,6 @@ function resolvePath(urlPath) {
 }
 
 const server = http.createServer((req, res) => {
-  // Add CORS headers for local asset loading
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
 
@@ -74,7 +73,6 @@ const server = http.createServer((req, res) => {
   const filePath = resolvePath(req.url);
 
   if (!filePath) {
-    // 404 handler
     const notFoundPage = path.join(ROOT, 'index.html');
     if (fs.existsSync(notFoundPage)) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -97,15 +95,35 @@ const server = http.createServer((req, res) => {
   fs.createReadStream(filePath).pipe(res);
 });
 
-server.listen(PORT, () => {
-  const url = `http://localhost:${PORT}`;
-  console.log(`\n===========================================`);
-  console.log(`🚀 Fatima Rashid Portfolio is LIVE at:`);
-  console.log(`👉 ${url}`);
-  console.log(`===========================================\n`);
+function openBrowser(url) {
+  const startCmd = process.platform === 'win32' ? 'start ""' : (process.platform === 'darwin' ? 'open' : 'xdg-open');
+  exec(`${startCmd} ${url}`);
+}
 
-  if (process.argv.includes('--open')) {
-    const startCmd = process.platform === 'win32' ? 'start' : (process.platform === 'darwin' ? 'open' : 'xdg-open');
-    exec(`${startCmd} ${url}`);
+function startServer(portToTry) {
+  server.listen(portToTry, () => {
+    const url = `http://localhost:${portToTry}`;
+    console.log(`\n===========================================`);
+    console.log(`🚀 Fatima Rashid Portfolio is LIVE!`);
+    console.log(`👉 Link: ${url}`);
+    console.log(`===========================================\n`);
+    console.log(`Website browser mein open ho rahi hai...`);
+    console.log(`(Band karne ke liye is window ko close kar dein ya Ctrl+C dabayein)\n`);
+
+    if (process.argv.includes('--open')) {
+      openBrowser(url);
+    }
+  });
+}
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`⚠️  Port ${PORT} pehle se use mein hai, agla port try kar rahe hain...`);
+    PORT++;
+    startServer(PORT);
+  } else {
+    console.error('Server error:', err);
   }
 });
+
+startServer(PORT);
