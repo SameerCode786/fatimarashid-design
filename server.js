@@ -100,7 +100,7 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   const url = `http://localhost:${PORT}`;
   console.log(`\n===========================================`);
-  console.log(`🚀 Usama Zahid Portfolio is LIVE at:`);
+  console.log(`🚀 Fatima Rashid Portfolio is LIVE at:`);
   console.log(`👉 ${url}`);
   console.log(`===========================================\n`);
 

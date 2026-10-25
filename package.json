@@ -1,7 +1,7 @@
 {
-  "name": "usamazahid-design",
+  "name": "fatimarashid-design",
   "version": "1.0.0",
-  "description": "Brand & Product Designer Portfolio - Usama Zahid",
+  "description": "Brand & Product Designer Portfolio - Fatima Rashid",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,6 +13,6 @@
     "design",
     "brand-to-url"
   ],
-  "author": "Usama Zahid",
+  "author": "Fatima Rashid",
   "license": "ISC"
 }
