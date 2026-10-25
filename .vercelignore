@@ -1,0 +1,11 @@
+# Scripts & maintenance files
+*.ps1
+fetch_html_clean.js
+rename_to_fatima.js
+launch.bat
+server.js
+
+# Git & Logs
+.git
+*.log
+node_modules

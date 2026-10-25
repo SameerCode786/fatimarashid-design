@@ -4,6 +4,7 @@
   "description": "Brand & Product Designer Portfolio - Fatima Rashid",
   "main": "server.js",
   "scripts": {
+    "build": "echo 'Static site ready for Vercel'",
     "start": "node server.js",
     "dev": "node server.js --open",
     "serve": "node server.js"
