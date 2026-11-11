@@ -190,11 +190,12 @@
     check();
   }
 
-  // 7. Portfolio index filtering & panel stack parallax
+  // 7. Portfolio & Branding index filtering & panel stack parallax
   function initPortfolioIndex() {
-    const workIndex = document.getElementById('work-index');
+    const workIndex = document.getElementById('work-index') || document.getElementById('brand-index');
     if (!workIndex) return;
 
+    const isBrandIndex = workIndex.id === 'brand-index';
     const pills = Array.from(workIndex.querySelectorAll('.pf-filters .t-pill'));
     const stack = workIndex.querySelector('.stack');
     const panels = stack ? Array.from(stack.querySelectorAll('.panel')) : [];
@@ -206,7 +207,9 @@
       emptyBox = document.createElement('div');
       emptyBox.className = 'pad pf-empty';
       emptyBox.style.display = 'none';
-      emptyBox.innerHTML = '<p class="ser">No case studies in this discipline yet — <a href="#expertise" style="text-decoration:underline">explore capabilities below</a> or <a href="/branding/" style="text-decoration:underline">view brand identity cases</a>.</p>';
+      emptyBox.innerHTML = isBrandIndex
+        ? '<p class="ser">No case studies in this category yet — <a href="/portfolio/" style="text-decoration:underline">view all product &amp; UX work</a>.</p>'
+        : '<p class="ser">No case studies in this discipline yet — <a href="#expertise" style="text-decoration:underline">explore capabilities below</a> or <a href="/branding/" style="text-decoration:underline">view brand identity cases</a>.</p>';
       stack.parentNode.insertBefore(emptyBox, stack.nextSibling);
     }
 
@@ -275,9 +278,12 @@
           if (emptyBox) emptyBox.style.display = visibleCount === 0 ? '' : 'none';
           if (countLabel) {
             const padded = String(visibleCount).padStart(2, '0');
-            const unit = visibleCount === 1 ? 'Project' : 'Projects';
+            const unit = isBrandIndex
+              ? (visibleCount === 1 ? 'project' : 'projects')
+              : (visibleCount === 1 ? 'Project' : 'Projects');
+            const defaultSuffix = isBrandIndex ? 'filter by category' : 'Explore by Discipline';
             countLabel.textContent = isAll
-              ? `${padded} ${unit} · Explore by Discipline`
+              ? `${padded} ${unit} · ${defaultSuffix}`
               : `${padded} ${unit} · ${category}`;
           }
           if (!reducedMotion) measureTops();
