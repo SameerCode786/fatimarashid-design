@@ -155,11 +155,13 @@
             const el = entry.target;
             const target = +(el.dataset.n || 0);
             const suffix = el.dataset.s || '';
+            const pad = +(el.dataset.pad || 0);
             const start = performance.now();
             const animate = (time) => {
               const progress = Math.min(1, (time - start) / 1200);
               const val = Math.round(target * (1 - Math.pow(1 - progress, 3)));
-              el.textContent = val + suffix;
+              const numStr = pad ? String(val).padStart(pad, '0') : String(val);
+              el.textContent = numStr + suffix;
               if (progress < 1) requestAnimationFrame(animate);
             };
             requestAnimationFrame(animate);
@@ -188,6 +190,102 @@
     check();
   }
 
+  // 7. Portfolio index filtering & panel stack parallax
+  function initPortfolioIndex() {
+    const workIndex = document.getElementById('work-index');
+    if (!workIndex) return;
+
+    const pills = Array.from(workIndex.querySelectorAll('.pf-filters .t-pill'));
+    const stack = workIndex.querySelector('.stack');
+    const panels = stack ? Array.from(stack.querySelectorAll('.panel')) : [];
+    const countLabel = workIndex.querySelector('.wh .lab');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let emptyBox = workIndex.querySelector('.pf-empty');
+    if (stack && !emptyBox) {
+      emptyBox = document.createElement('div');
+      emptyBox.className = 'pad pf-empty';
+      emptyBox.style.display = 'none';
+      emptyBox.innerHTML = '<p class="ser">No case studies in this discipline yet — <a href="#expertise" style="text-decoration:underline">explore capabilities below</a> or <a href="/branding/" style="text-decoration:underline">view brand identity cases</a>.</p>';
+      stack.parentNode.insertBefore(emptyBox, stack.nextSibling);
+    }
+
+    const getVisiblePanels = () => panels.filter((p) => p.style.display !== 'none');
+
+    let panelTops = [];
+    const measureTops = () => {
+      panelTops = getVisiblePanels().map((el) => {
+        const top = parseFloat(getComputedStyle(el).top);
+        return !isNaN(top) && top > 0 ? top : 0.11 * window.innerHeight;
+      });
+    };
+
+    let rafId = 0;
+    const tickParallax = () => {
+      rafId = requestAnimationFrame(tickParallax);
+      const visible = getVisiblePanels();
+      visible.forEach((el, idx) => {
+        const baseTop = panelTops[idx] || 0;
+        const delta = Math.max(-600, Math.min(600, el.getBoundingClientRect().top - baseTop));
+        el.style.setProperty('--py', (-0.08 * delta).toFixed(1));
+        el.style.setProperty('--pr', (0.015 * delta).toFixed(2));
+        const nextEl = visible[idx + 1];
+        if (!nextEl) {
+          el.style.transform = '';
+          return;
+        }
+        const overlap = Math.min(1, Math.max(0, 1 - (nextEl.getBoundingClientRect().top - baseTop) / el.offsetHeight));
+        el.style.transform = 'scale(' + (1 - 0.05 * overlap).toFixed(3) + ')';
+      });
+    };
+
+    if (!reducedMotion && panels.length > 0) {
+      measureTops();
+      window.addEventListener('resize', measureTops, { passive: true });
+      rafId = requestAnimationFrame(tickParallax);
+    }
+
+    if (pills.length > 0 && panels.length > 0) {
+      pills.forEach((pill) => {
+        pill.addEventListener('click', () => {
+          const category = pill.textContent.trim();
+          const filterKey = (pill.dataset.filter || category).toLowerCase();
+          const isAll = filterKey === 'all' || filterKey === 'all projects' || category === 'All' || category === 'All Projects';
+
+          pills.forEach((p) => {
+            const active = p === pill;
+            p.classList.toggle('on', active);
+            p.setAttribute('aria-selected', active ? 'true' : 'false');
+          });
+
+          let visibleCount = 0;
+          panels.forEach((panel) => {
+            const tags = (panel.dataset.tags || '').toLowerCase().split(/\s+/).filter(Boolean);
+            const labText = (panel.querySelector('.lab')?.textContent || '').toLowerCase();
+            const show = isAll || (tags.length > 0 ? tags.includes(filterKey) : labText.includes(filterKey));
+            panel.style.display = show ? '' : 'none';
+            if (show) {
+              panel.classList.toggle('is-ind', visibleCount % 2 === 0);
+              panel.classList.toggle('is-ink', visibleCount % 2 === 1);
+              visibleCount++;
+            }
+          });
+
+          if (stack) stack.style.display = visibleCount > 0 ? '' : 'none';
+          if (emptyBox) emptyBox.style.display = visibleCount === 0 ? '' : 'none';
+          if (countLabel) {
+            const padded = String(visibleCount).padStart(2, '0');
+            const unit = visibleCount === 1 ? 'Project' : 'Projects';
+            countLabel.textContent = isAll
+              ? `${padded} ${unit} · Explore by Discipline`
+              : `${padded} ${unit} · ${category}`;
+          }
+          if (!reducedMotion) measureTops();
+        });
+      });
+    }
+  }
+
   // Run on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -202,6 +300,7 @@
     initMobileMenu();
     initScrollAnimations();
     initHeaderScroll();
+    initPortfolioIndex();
   }
 })();
 
